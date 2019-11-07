@@ -15,15 +15,19 @@ class Introspection(BaseIntrospection):
         700: 'float', # 'FloatField',
         701: 'float', # 'FloatField',
         869: 'str', # 'GenericIPAddressField',
+        1007: 'IntArray', # 'ArrayField(IntegerField)',
+        1015: 'StrArray', # 'ArrayField(CharField)',
         1042: 'str', # 'CharField',  # blank-padded
         1043: 'str', # 'CharField',
         1082: 'date', # 'DateField',
         1083: 'time', # 'TimeField',
         1114: 'datetime', # 'DateTimeField',
+        1182: 'StrArray',  # 'ArrayField(DateField)' FIXME in Pony
         1184: 'datetime', # 'DateTimeField',
         1266: 'time', # 'TimeField',
         1700: 'Decimal', # 'DecimalField',
-        2950: 'UUID', #'UUIDField',
+        2950: 'UUID', # 'UUIDField',
+        3802: 'Json', # 'JSONField',
     }
 
     imports = {
@@ -33,6 +37,9 @@ class Introspection(BaseIntrospection):
         'time': 'from datetime import time',
         'date': 'from datetime import date',
         'Decimal': 'from decimal import Decimal',
+        'Json': 'from pony.orm import Json',
+        'IntArray': 'from pony.orm import IntArray',
+        'StrArray': 'from pony.orm import StrArray',
     }
 
     ignored_tables = []

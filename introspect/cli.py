@@ -27,13 +27,13 @@ from textwrap import dedent
 import warnings
 
 from .postgres import Introspection as PostgresIntrospection
-from .mysql import Introspection as MysqlIntrospection
-from .sqlite import Introspection as SqliteIntrospection
+#from .mysql import Introspection as MysqlIntrospection
+#from .sqlite import Introspection as SqliteIntrospection
 
 INROSPECTION_IMPL = {
     'postgresql': PostgresIntrospection,
-    'mysql': MysqlIntrospection,
-    'sqlite': SqliteIntrospection,
+#    'mysql': MysqlIntrospection,
+#    'sqlite': SqliteIntrospection,
 }
 
 # TODO related field set
@@ -77,6 +77,8 @@ class Command:
         db = import_obj(database)
 
         connection = db.provider.connect()
+        if isinstance(connection, tuple):
+            connection, _ = connection
 
         # get provider
         if isinstance(db, Database):
@@ -113,7 +115,7 @@ class Command:
                     raise
                 constraints = {}
             primary_key_columns = list(
-                introspection.get_primary_key_columns(cursor, table_name)
+                introspection.get_primary_key_columns(cursor, table_name) or []
             )
             unique_columns = [
                 c['columns'][0] for c in constraints.values()
@@ -257,7 +259,10 @@ class Command:
 
                 if row[6]:  # If it's NULL...
                     extra_params['null'] = True
-                
+
+                if att_name != att_name.lower() and 'column' not in field_kwargs:
+                    field_kwargs['column'] = att_name
+
                 def sort_key(item, default=len(field_kwargs)):
                     key, val = item
                     try:
@@ -286,7 +291,7 @@ class Command:
                     field_desc = f'{att_name} = {cls}({field_type}{kwargs_list})'
 
                     if comment_notes:
-                        field_desc += f'  # {join(comment_notes)}'
+                        field_desc += f'  # {"; ".join(comment_notes)}'
                     yield f'    {field_desc}' 
 
             rel_attrs = data.get('rel_attrs', ())
@@ -362,8 +367,9 @@ class Command:
             field_type, opts, _import = self.introspection.get_field_type(row[1], row)
         except KeyError:
             field_type = 'LongStr'
+            opts = None
             _import = 'from pony.orm.ormtypes import LongStr'
-            field_notes.append('This field type is a guess.')
+            field_notes.append('This field type is a guess. The actual column type is {}'.format(row[1]))
 
         if _import:
             self.imports.append(_import)
